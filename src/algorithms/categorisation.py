@@ -1,24 +1,17 @@
-from src.classes.records import Records
 from pandas import DataFrame
+from src.classes.records import Records
 
 
 def insert_temporal_category(records: Records) -> Records:
     """
-    The 'Course activity completion updated' events vary depending on the settings, and they also have some
-    issues that still need to be fixed (https://moodle.org/mod/forum/discuss.php?d=391272).
-    Currently, since they are not informative for temporal analysis, we have removed them, as students would be
-    performing other tasks if they were automatically set. They can only be manually set from the course homepage.
+    Insert the temporal category.
 
     Args:
-        records: the Records object.
+        records: the records object.
     """
 
     # get the dataframe
     df = records.get_df()
-
-    activity_completion = list((df.loc[df['Event_name'] == 'Course activity completion updated']).index)
-    df.drop(activity_completion, axis=0, inplace=True)
-    df = df.reset_index(drop=True)
 
     # assignment
     assignment = df['Component'] == 'Assignment'
@@ -62,12 +55,14 @@ def insert_temporal_category(records: Records) -> Records:
 
     df.loc[assignment &
            (df['Event_name'] == 'The status of the submission has been updated.'), 'Category'] = 'Simultaneous'
+    """
     assignment_ssu = list((df.loc[assignment].loc[df['Event_name'] == 'The status of the submission has been updated.']).index)
     for item in assignment_ssu:
         search_next = item + 1
         if df.iloc[search_next]['Event_name'] == 'Course module viewed':
             df.loc[search_next, 'Category'] = 'Starting'
             df.loc[search_next, 'Event_name'] = 'The status of the submission has been viewed.'
+    """
 
     df.loc[assignment &
            (df['Event_name'] == 'The status of the submission has been viewed.'), 'Category'] = 'Starting'
@@ -76,7 +71,7 @@ def insert_temporal_category(records: Records) -> Records:
            (df['Event_name'] == 'The user duplicated their submission.'), 'Category'] = 'Ending'
     assignment_uds = list((df.loc[assignment].loc[df['Event_name'] == 'The user duplicated their submission.']).index)
     for item in assignment_uds:
-        search_before = item - 2
+        search_before = item - 1
         if df.iloc[search_before]['Event_name'] == 'Course module viewed':
             df.iloc[search_before], df.iloc[item] = df.iloc[item], df.iloc[search_before]
 
@@ -157,8 +152,8 @@ def insert_temporal_category(records: Records) -> Records:
     # choice
     df.loc[(df['Component'] == 'Choice') &
            (df['Event_name'] == 'Choice answer added'), 'Category'] = 'Closing'
-    choice_cad = list((df.loc[df['Component'] == 'Choice'].loc[df['Event_name'] == 'Choice answer added']).index)
-    for item in choice_cad:
+    choice_caa = list((df.loc[df['Component'] == 'Choice'].loc[df['Event_name'] == 'Choice answer added']).index)
+    for item in choice_caa:
         add_next = item + 0.5
         df.loc[add_next] = df.loc[item]
         df.loc[add_next, 'Category'] = 'Starting'
@@ -382,8 +377,8 @@ def insert_temporal_category(records: Records) -> Records:
 
     df.loc[(df['Component'] == 'Messaging') &
            (df['Event_name'] == 'Group message sent'), 'Category'] = 'Ending'
-    messaging_gm = list((df.loc[df['Component'] == 'Messaging'].loc[df['Event_name'] == 'Group message sent']).index)
-    for item in messaging_gm:
+    messaging_gms = list((df.loc[df['Component'] == 'Messaging'].loc[df['Event_name'] == 'Group message sent']).index)
+    for item in messaging_gms:
         add_next = item + 0.5
         df.loc[add_next] = df.loc[item]
         df.loc[add_next, 'Category'] = 'Starting'
@@ -392,8 +387,8 @@ def insert_temporal_category(records: Records) -> Records:
 
     df.loc[(df['Component'] == 'Messaging') &
            (df['Event_name'] == 'Message sent'), 'Category'] = 'Ending'
-    messaging_gm = list((df.loc[df['Component'] == 'Messaging'].loc[df['Event_name'] == 'Message sent']).index)
-    for item in messaging_gm:
+    messaging_ms = list((df.loc[df['Component'] == 'Messaging'].loc[df['Event_name'] == 'Message sent']).index)
+    for item in messaging_ms:
         add_next = item + 0.5
         df.loc[add_next] = df.loc[item]
         df.loc[add_next, 'Category'] = 'Starting'
@@ -541,18 +536,21 @@ def insert_temporal_category(records: Records) -> Records:
            (df['Event_name'] == 'Wiki page viewed'), 'Category'] = 'Starting'
 
     df = df.reset_index(drop=True)
+
     records = Records(df)
 
     return records
 
 
-def convert_simultaneous_ending(df: DataFrame, events_index):
+def convert_simultaneous_ending(df: DataFrame, events_index) -> DataFrame:
 
     for item in events_index:
         search_next = item + 1
         if search_next < len(df):
             if df.iloc[search_next]['Time'] != df.iloc[item]['Time'] and \
+                    df.iloc[search_next]['Time'] != (df.iloc[item]['Time'] + 1) and \
                     df.iloc[search_next]['Event_name'] != df.iloc[item]['Event_name']:
+
                 df.loc[item, 'Category'] = 'Ending'
                 add_next = item + 0.5
                 df.loc[add_next] = df.loc[item]

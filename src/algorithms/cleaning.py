@@ -63,10 +63,41 @@ def remove_deleted_users(df: DataFrame, deleted_users: str) -> DataFrame:
     return df
 
 
+def clean_automatic_events(df: DataFrame) -> DataFrame:
+
+    """
+    Remove unnecessary data. Here are listed logs that usually do not involve any user actions.
+    Please be aware that if you deal with time, and you calculate the duration as the interval between two
+    consecutive events, the automatic events must be removed before the duration calculation to avoid biased results.
+
+    Args:
+        df: the dataframe.
+
+    Returns:
+
+    """
+
+    # remove the 'Course activity completion updated' events since they are not informative for temporal analysis.
+    activity_completion = list((df.loc[df['Event_name'] == 'Course activity completion updated']).index)
+    df.drop(activity_completion, axis=0, inplace=True)
+
+    # automatically generated events that do not involve student actions
+    grd_itm_ctd = list((df.loc[df['Role'] == 'Student'].loc[df['Event_name'] == 'Grade item created']).index)
+    grd_itm_upd = list((df.loc[df['Role'] == 'Student'].loc[df['Event_name'] == 'Grade item updated']).index)
+    user_graded = list((df.loc[df['Role'] == 'Student'].loc[df['Event_name'] == 'User graded']).index)
+
+    to_remove = activity_completion + grd_itm_ctd + grd_itm_upd + user_graded
+    df.drop(to_remove, axis=0, inplace=True)
+
+    df = df.reset_index(drop=True)
+
+    return df
+
+
 def clean_dataset_records(df: DataFrame) -> DataFrame:
     """
-    Remove unnecessary data. Here are listed logs that usually do not involve any user actions or are not related to
-    learning activities. Moreover, some user logs may be gathered for deleted courses or for courses not listed in the
+    Remove unnecessary data. Here are listed logs that are not related to learning activities.
+    Moreover, some user logs may be gathered for deleted courses or for courses not listed in the
     course_shortnames file (because you do not want to analyse them). When attempting to match the course id and
     shortname, they are not matched and the course/area field will be empty. This function is customisable according
     to specific needs.
@@ -81,11 +112,6 @@ def clean_dataset_records(df: DataFrame) -> DataFrame:
         The cleaned dataframe.
 
     """
-
-    # automatically generated events that do not involve student actions
-    grd_itm_ctd = list((df.loc[df['Role'] == 'Student'].loc[df['Event_name'] == 'Grade item created']).index)
-    grd_itm_upd = list((df.loc[df['Role'] == 'Student'].loc[df['Event_name'] == 'Grade item updated']).index)
-    user_graded = list((df.loc[df['Role'] == 'Student'].loc[df['Event_name'] == 'User graded']).index)
 
     # logs not related to learning activities
     logs = list((df.loc[df['Component'] == 'Logs']).index)
@@ -104,8 +130,7 @@ def clean_dataset_records(df: DataFrame) -> DataFrame:
     # remove remaining admin/manager-related actions that are not specified in the integrating functions
     system = list((df.loc[df['Component'] == 'System']).index)
 
-    to_remove = grd_itm_ctd + grd_itm_upd + user_graded + logs + recycle_bin + failed_login + report + insights + \
-        prediction + other + records_left + system
+    to_remove = logs + recycle_bin + failed_login + report + insights + prediction + other + records_left + system
     df.drop(to_remove, axis=0, inplace=True)
 
     return df

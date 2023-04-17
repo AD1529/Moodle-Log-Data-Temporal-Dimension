@@ -9,6 +9,8 @@ import src.algorithms.sorting as st
 # get the dataframe
 file_path = 'datasets/df_consolidated.csv'
 df = pd.read_csv(file_path, sep=',', index_col=0)
+# remove automatic events before inserting the categories to calculate the duration.
+df = cl.clean_automatic_events(df)
 
 # create a Records object to use its methods
 records = Records(df)
@@ -19,10 +21,12 @@ records = ct.insert_temporal_category(records)
 # compute the categorical duration before the extraction
 records = dt.get_categorical_duration(records)
 
+"""
 # extract student records
 student_records = ex.extract_records(records, role=['Student'])
 # remove useless data from the entire dataset
 df = cl.clean_dataset_records(student_records.get_df())
 
 # compute the estimated duration
-# student_records = dt.get_estimated_duration(student_records) #TO BE ADDED
+# student_records = dt.get_estimated_duration(student_records) 
+"""
