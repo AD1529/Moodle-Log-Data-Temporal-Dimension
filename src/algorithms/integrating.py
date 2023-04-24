@@ -7,13 +7,11 @@ def get_dataframe(file_path: str, columns: [] = None) -> DataFrame:
     Read the dataframe and add columns if missing.
 
     Args:
-        file_path: str,
-            The path of the dataframe object.
-        columns: list,
-            The list of column names.
+        file_path: The path of the dataframe object.
+        columns: The list of column names.
 
     Returns:
-        The dataframe with column names.
+        The dataframe with specific column names.
 
     """
 

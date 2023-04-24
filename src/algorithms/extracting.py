@@ -5,7 +5,7 @@ from pandas import DataFrame
 
 def get_startdate_enddate(df: DataFrame, course_dates: str, courses: [str], years: [int]):
     """
-    Remove values that don't fall within the start and end dates of the course.
+    Remove values that do not fall within the start and end dates of the course.
 
     Query to extract database data:
         SELECT shortname, startdate, enddate
@@ -31,8 +31,11 @@ def get_startdate_enddate(df: DataFrame, course_dates: str, courses: [str], year
     for course in courses:
         for year in years:
             shortname = course + '_' + str(year)
+            # get the startdate
             startdate = course_dates.loc[course_dates['shortname'] == shortname, 'startdate'].values[0]
+            # get the enddate
             enddate = course_dates.loc[course_dates['shortname'] == shortname, 'enddate'].values[0]
+            # remove values that do not fall within the start and end dates
             to_remove = (df.loc[(df.Course_Area == course) & (df.Year == year) &
                                 (df.Unix_Time < startdate) | (df.Unix_Time > enddate)]).index
             df.drop(to_remove, axis=0, inplace=True)

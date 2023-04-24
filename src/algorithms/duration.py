@@ -1,7 +1,5 @@
 import math
-
 from src.classes.records import Records
-import numpy as np
 
 
 def get_basic_duration(records: Records,
@@ -11,11 +9,11 @@ def get_basic_duration(records: Records,
     column to the dataframe.
 
     Args:
-        records: the class of records to analyse
+        records: the object of the classe records
         duration_field: name of the dataframe duration column
 
     Returns:
-        Records which include the duration values
+        Records with the basic duration
     """
 
     # get the dataframe
@@ -35,51 +33,94 @@ def get_basic_duration(records: Records,
         idx = df.loc[df.Username == user].index[-1]
         df.drop(idx, inplace=True)
 
-    # covert the values to int in the df
-    df[duration_field] = [np.int64(d) for d in df[duration_field]]
+    # reset index
+    df = df.reset_index(drop=True)
+
+    # set data type
+    df[duration_field] = df[duration_field].astype('int64')
 
     records = Records(df)
 
     return records
 
 
-def get_categorical_duration(records: Records) -> Records:
+def get_categorical_duration(records: Records,
+                             basic_duration_field: str = 'basic_duration',
+                             categorical_duration_field: str = 'categorical_duration') -> Records:
+    """
+    Calculate the duration according to the different categories. Please be aware that sometimes simultaneous events
+    can last 1 seconds rather than 0. This happens because we are utilising a one-second granularity Unix timestamp
+    value. Looking at the timestamps with a granularity per millisecond, they are not truly simultaneous. As a result,
+    it is possible for one action to be recorded in the millisecond of one second and another in the next second. To
+    preserve this information, the duration value is assigned to the first event that is not simultaneous. Please be
+    aware that the order of computation should be as follows: starting, simultaneous, instantaneous, closing, ending.
 
-    # compute the basic duration
-    records = get_basic_duration(records)
+    Args:
+        records: the object of the classe records
+        basic_duration_field: name of the basic duration column
+        categorical_duration_field: name of the categorical duration column
+
+    Returns:
+        Records with the categorical duration
+    """
 
     # get the dataframe
     df = records.get_df()
 
+    # ensure the index is correctly sorted
+    df = df.reset_index(drop=True)
+
+    # starting
     starting = df.Category == 'Starting'
-    df.loc[starting, 'categorical_duration'] = df.loc[starting]['basic_duration']
+    # keep the basic duration
+    df.loc[starting, categorical_duration_field] = df.loc[starting][basic_duration_field]
 
-    ending = list((df.loc[df.Category == 'Ending']).index)
-    for item in ending:
-        search_before = item - 1
-        duration = df.loc[search_before, 'basic_duration']
-        df.loc[item, 'categorical_duration'] = math.ceil(duration/2)
-        df.loc[search_before, 'categorical_duration'] = math.floor(duration/2)
+    # simultaneous
+    simultaneous = list((df.loc[df.Category == 'Simultaneous']).index)
+    # in case a simultaneous events last more than 0 seconds (for millisecond recording)
+    for item in simultaneous:
+        search_next = item + 1
+        if search_next < len(df):
+            # if the following record is simultaneous
+            if df.iloc[search_next]['Category'] == 'Simultaneous':
+                df.loc[search_next, basic_duration_field] = df.loc[item, basic_duration_field]
+            else:
+                # assign the duration value to the following record
+                df.loc[search_next, categorical_duration_field] = \
+                    df.loc[search_next, basic_duration_field] + df.loc[item, basic_duration_field]
 
-    simultaneous = df.Category == 'Simultaneous'
-    df.loc[simultaneous, 'categorical_duration'] = 0
+    # takes the duration of the simultaneous record to 0
+    df.loc[df.Category == 'Simultaneous', categorical_duration_field] = 0
 
-    # TODO trovare soluzione a eventi che durano 1 secondo
-
-    closing = list((df.loc[df.Category == 'Closing']).index)
-    for item in closing:
-        search_before = item - 1
-        df.loc[item, 'categorical_duration'] = df.loc[search_before, 'basic_duration']
-        df.loc[search_before, 'categorical_duration'] = 0
-
+    # instantaneous
     instantaneous = list((df.loc[df.Category == 'Instantaneous']).index)
     for item in instantaneous:
         search_before = item - 1
-        df.loc[search_before, 'categorical_duration'] = df.loc[search_before, 'basic_duration'] + df.loc[item, 'basic_duration']
-        df.loc[item, 'categorical_duration'] = 0
+        # assign the duration value of the instantaneous record to the previous record
+        df.loc[search_before, categorical_duration_field] = \
+            df.loc[search_before, basic_duration_field] + df.loc[item, basic_duration_field]
+        # take the duration of the instantaneous record to 0
+        df.loc[item, categorical_duration_field] = 0
 
-    # set data type
-    df['categorical_duration'] = df['categorical_duration'].astype('Int64')
+    # closing
+    closing = list((df.loc[df.Category == 'Closing']).index)
+    for item in closing:
+        search_before = item - 1
+        # assign the duration value of the opening record to the closing record
+        df.loc[item, categorical_duration_field] = df.loc[search_before, basic_duration_field]
+        # take the duration of the opening record to 0
+        df.loc[search_before, categorical_duration_field] = 0
+
+    # ending
+    ending = list((df.loc[df.Category == 'Ending']).index)
+    for item in ending:
+        search_before = item - 1
+        # find the duration value
+        duration = df.loc[search_before, basic_duration_field]
+        # assign half of the duration to the starting event
+        df.loc[item, categorical_duration_field] = math.ceil(duration / 2)
+        # assign half of the duration to the ending event
+        df.loc[search_before, categorical_duration_field] = math.floor(duration / 2)
 
     records = Records(df)
 

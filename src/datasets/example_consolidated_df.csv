@@ -1,0 +1,11 @@
+ID,Time,Year,Course_Area,Unix_Time,Username,Component,Event_name,Role,userid,courseid,Status
+2204814,"23/01/2021, 11:56:32",2021,Course name 54,1674471392,User 281,Quiz,Course module viewed,Student,281,54,Available
+2204815,"23/01/2021, 11:56:35",2021,Course name 54,1674471395,User 281,Quiz,Course module viewed,Student,281,54,Available
+2204816,"23/01/2021, 11:56:38",2021,Course name 54,1674471398,User 281,File,Course module viewed,Student,281,54,Available
+2204817,"23/01/2021, 11:56:39",2021,Course name 54,1674471399,User 281,URL,Course module viewed,Student,281,54,Available
+2204818,"23/01/2021, 11:56:41",2021,Course name 54,1674471401,User 281,Assignment,Course module viewed,Student,281,54,Available
+2204819,"23/01/2021, 11:56:41",2021,Course name 54,1674471401,User 281,Assignment,The status of the submission has been viewed.,Student,281,54,Available
+2204820,"23/01/2021, 11:56:54",2021,Course name 54,1674471414,User 281,Course home,Course viewed,Student,281,54,Available
+2204834,"23/01/2021, 12:09:05",2021,Authentication,1674472145,User 3,Login,User has logged in,Manager,3,0,Available
+2204835,"23/01/2021, 12:09:05",2021,Profile,1674472145,User 3,Dashboard,Dashboard viewed,Manager,3,0,Available
+2204820,"23/01/2021, 11:56:54",2021,Course name 38,1674471414,User 3,Course home,Course viewed,Manager,3,38,Available

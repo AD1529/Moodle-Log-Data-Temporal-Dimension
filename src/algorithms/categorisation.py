@@ -4,10 +4,8 @@ from src.classes.records import Records
 
 def insert_temporal_category(records: Records) -> Records:
     """
-    Insert the temporal category.
-
-    Args:
-        records: the records object.
+    Insert the temporal category. This list comprises all the Moodle standard student role-related 'participating'
+    and 'other' events. You can add other events according to your needs.
     """
 
     # get the dataframe
@@ -40,6 +38,7 @@ def insert_temporal_category(records: Records) -> Records:
     for item in assignment_sc:
         search_before = item - 2
         if df.iloc[search_before]['Event_name'] == 'Course module viewed':
+            # switch the events to calculate the duration properly
             df.iloc[search_before], df.iloc[item] = df.iloc[item], df.iloc[search_before]
 
     df.loc[assignment &
@@ -51,18 +50,11 @@ def insert_temporal_category(records: Records) -> Records:
     for item in assignment_up:
         search_before = item - 2
         if df.iloc[search_before]['Event_name'] == 'Course module viewed':
+            # switch the events to calculate the duration properly
             df.iloc[search_before], df.iloc[item] = df.iloc[item], df.iloc[search_before]
 
     df.loc[assignment &
            (df['Event_name'] == 'The status of the submission has been updated.'), 'Category'] = 'Simultaneous'
-    """
-    assignment_ssu = list((df.loc[assignment].loc[df['Event_name'] == 'The status of the submission has been updated.']).index)
-    for item in assignment_ssu:
-        search_next = item + 1
-        if df.iloc[search_next]['Event_name'] == 'Course module viewed':
-            df.loc[search_next, 'Category'] = 'Starting'
-            df.loc[search_next, 'Event_name'] = 'The status of the submission has been viewed.'
-    """
 
     df.loc[assignment &
            (df['Event_name'] == 'The status of the submission has been viewed.'), 'Category'] = 'Starting'
@@ -73,6 +65,7 @@ def insert_temporal_category(records: Records) -> Records:
     for item in assignment_uds:
         search_before = item - 1
         if df.iloc[search_before]['Event_name'] == 'Course module viewed':
+            # switch the events to calculate the duration properly
             df.iloc[search_before], df.iloc[item] = df.iloc[item], df.iloc[search_before]
 
     df.loc[(df['Component'] == 'Assignment') &
@@ -81,6 +74,7 @@ def insert_temporal_category(records: Records) -> Records:
     for item in assignment_cm:
         add_next = item + 0.5
         df.loc[add_next] = df.loc[item]
+        # add a new event to represent the starting action after the ending
         df.loc[add_next, 'Category'] = 'Starting'
         df.loc[add_next, 'Event_name'] = 'The status of the submission has been viewed.'
     df = df.sort_index().reset_index(drop=True)
@@ -120,17 +114,17 @@ def insert_temporal_category(records: Records) -> Records:
     df.loc[(df['Component'] == 'Calendar') &
            (df['Event_name'] == 'Calendar event created'), 'Category'] = 'Simultaneous'
     calendar_ec = list((df.loc[df['Component'] == 'Calendar'].loc[df['Event_name'] == 'Calendar event created']).index)
-    df = convert_simultaneous_ending(df, calendar_ec)
+    df = convert_calendar_simultaneous_ending(df, calendar_ec)
 
     df.loc[(df['Component'] == 'Calendar') &
            (df['Event_name'] == 'Calendar event deleted'), 'Category'] = 'Simultaneous'
     calendar_ed = list((df.loc[df['Component'] == 'Calendar'].loc[df['Event_name'] == 'Calendar event deleted']).index)
-    df = convert_simultaneous_ending(df, calendar_ed)
+    df = convert_calendar_simultaneous_ending(df, calendar_ed)
 
     df.loc[(df['Component'] == 'Calendar') &
            (df['Event_name'] == 'Calendar event updated'), 'Category'] = 'Simultaneous'
     calendar_eu = list((df.loc[df['Component'] == 'Calendar'].loc[df['Event_name'] == 'Calendar event updated']).index)
-    df = convert_simultaneous_ending(df, calendar_eu)
+    df = convert_calendar_simultaneous_ending(df, calendar_eu)
 
     # chat
     df.loc[(df['Component'] == 'Chat') &
@@ -142,6 +136,7 @@ def insert_temporal_category(records: Records) -> Records:
     for item in chat_ms:
         add_next = item + 0.5
         df.loc[add_next] = df.loc[item]
+        # add a new event to represent the starting action after the ending
         df.loc[add_next, 'Category'] = 'Starting'
         df.loc[add_next, 'Event_name'] = 'Course module viewed'
     df = df.sort_index().reset_index(drop=True)
@@ -156,6 +151,7 @@ def insert_temporal_category(records: Records) -> Records:
     for item in choice_caa:
         add_next = item + 0.5
         df.loc[add_next] = df.loc[item]
+        # add a new event to represent the starting action after the closing
         df.loc[add_next, 'Category'] = 'Starting'
         df.loc[add_next, 'Event_name'] = 'Choice summary viewed'
     df = df.sort_index().reset_index(drop=True)
@@ -166,6 +162,7 @@ def insert_temporal_category(records: Records) -> Records:
     for item in choice_cad:
         add_next = item + 0.5
         df.loc[add_next] = df.loc[item]
+        # add a new event to represent the starting action after the closing
         df.loc[add_next, 'Category'] = 'Starting'
         df.loc[add_next, 'Event_name'] = 'Course module viewed'
     df = df.sort_index().reset_index(drop=True)
@@ -177,6 +174,7 @@ def insert_temporal_category(records: Records) -> Records:
         search_next = item + 1
         if search_next < len(df):
             if df.iloc[search_next]['Category'] == 'Closing':
+                # indicate the correct category if the next event is closing
                 df.loc[item, 'Category'] = 'Opening'
 
     # contact request
@@ -213,6 +211,7 @@ def insert_temporal_category(records: Records) -> Records:
         search_next = item + 1
         if search_next < len(df):
             if df.iloc[search_next]['Event_name'] == 'Response submitted':
+                # indicate the correct category
                 df.loc[item, 'Category'] = 'Opening'
 
     df.loc[(df['Component'] == 'Feedback') &
@@ -221,6 +220,7 @@ def insert_temporal_category(records: Records) -> Records:
     for item in feedback_rs:
         add_next = item + 0.5
         df.loc[add_next] = df.loc[item]
+        # add a new event to represent the starting action after the closing
         df.loc[add_next, 'Category'] = 'Starting'
         df.loc[add_next, 'Event_name'] = 'Feedback summary viewed'
     df = df.sort_index().reset_index(drop=True)
@@ -271,6 +271,7 @@ def insert_temporal_category(records: Records) -> Records:
     for item in forum_pc:
         add_next = item + 0.5
         df.loc[add_next] = df.loc[item]
+        # add a new event to represent the starting action after the simultaneous
         df.loc[add_next, 'Category'] = 'Starting'
         df.loc[add_next, 'Event_name'] = 'Discussion viewed'
     df = df.sort_index().reset_index(drop=True)
@@ -311,11 +312,24 @@ def insert_temporal_category(records: Records) -> Records:
            (df['Event_name'] == 'xAPI statement received'), 'Category'] = 'Closing'
     h5p_sr = list((df.loc[df['Component'] == 'H5P'].loc[df['Event_name'] == 'xAPI statement received']).index)
     for item in h5p_sr:
+        search_next = item + 1
         add_next = item + 0.5
-        df.loc[add_next] = df.loc[item]
-        df.loc[add_next, 'Category'] = 'Starting'
-        df.loc[add_next, 'Event_name'] = 'H5P summary viewed'
+        # if after a statement received there is another statement received
+        if df.iloc[search_next]['Event_name'] == 'xAPI statement received':
+            df.loc[add_next] = df.loc[item]
+            # add a new event to represent the starting action
+            df.loc[add_next, 'Category'] = 'Opening'
+            df.loc[add_next, 'Event_name'] = 'H5P content viewed'
+        else:
+            df.loc[add_next] = df.loc[item]
+            # add a new event to represent the starting action
+            df.loc[add_next, 'Category'] = 'Starting'
+            df.loc[add_next, 'Event_name'] = 'H5P summary viewed'
     df = df.sort_index().reset_index(drop=True)
+
+    # insights
+    df.loc[(df['Component'] == 'System') &
+           (df['Event_name'] == 'Insights viewed'), 'Category'] = 'Starting'
 
     # jitsi
     jitsi = df['Component'] == 'Jitsi'
@@ -323,6 +337,9 @@ def insert_temporal_category(records: Records) -> Records:
            (df['Event_name'] == 'Course module viewed'), 'Category'] = 'Starting'
     df.loc[jitsi &
            (df['Event_name'] == 'Enter to session'), 'Category'] = 'Starting'
+
+    # level up
+    df.loc[df['Component'] == 'Level Up XP', 'Category'] = 'Instantaneous'
 
     # lesson
     lesson = df['Component'] == 'Lesson'
@@ -354,17 +371,25 @@ def insert_temporal_category(records: Records) -> Records:
     for item in lesson_qa:
         add_next = item + 0.5
         df.loc[add_next] = df.loc[item]
+        # add a new event to represent the starting action after the closing
         df.loc[add_next, 'Category'] = 'Starting'
         df.loc[add_next, 'Event_name'] = 'Question summary viewed'
     df = df.sort_index().reset_index(drop=True)
 
     # login
     df.loc[(df['Component'] == 'Login') &
-           (df['Event_name'] == 'User has logged in'), 'Category'] = 'Starting'
+           (df['Event_name'] == 'User has logged in'), 'Category'] = 'Simultaneous'
+    login = list((df.loc[df['Component'] == 'Login'].loc[df['Event_name'] == 'User has logged in']).index)
+    for item in login:
+        search_next = item + 1
+        if search_next < len(df):
+            # if the users access for the first time, they are requested to update their password
+            if df.iloc[search_next]['Event_name'] == 'User password updated':
+                df.loc[item, 'Category'] = 'Starting'
 
     # logout
     df.loc[(df['Component'] == 'Logout') &
-           (df['Event_name'] == 'User logged out'), 'Category'] = 'Instantaneous'
+           (df['Event_name'] == 'User logged out'), 'Category'] = 'Starting'
 
     # messaging
     messaging = df['Component'] == 'Messaging'
@@ -381,6 +406,7 @@ def insert_temporal_category(records: Records) -> Records:
     for item in messaging_gms:
         add_next = item + 0.5
         df.loc[add_next] = df.loc[item]
+        # add a new event to represent the starting action after the ending
         df.loc[add_next, 'Category'] = 'Starting'
         df.loc[add_next, 'Event_name'] = 'Message viewed'
     df = df.sort_index().reset_index(drop=True)
@@ -391,10 +417,14 @@ def insert_temporal_category(records: Records) -> Records:
     for item in messaging_ms:
         add_next = item + 0.5
         df.loc[add_next] = df.loc[item]
+        # add a new event to represent the starting action after the ending
         df.loc[add_next, 'Category'] = 'Starting'
         df.loc[add_next, 'Event_name'] = 'Message viewed'
     df = df.sort_index().reset_index(drop=True)
 
+    # notification
+    df.loc[(df['Component'] == 'Notification') &
+           (df['Event_name'] == 'Notification viewed'), 'Category'] = 'Starting'
     # page
     df.loc[(df['Component'] == 'Page') &
            (df['Event_name'] == 'Course module viewed'), 'Category'] = 'Starting'
@@ -427,10 +457,24 @@ def insert_temporal_category(records: Records) -> Records:
            (df['Event_name'] == 'Course module instance list viewed'), 'Category'] = 'Starting'
     df.loc[reservation &
            (df['Event_name'] == 'Course module viewed'), 'Category'] = 'Starting'
+
     df.loc[reservation &
-           (df['Event_name'] == 'Reservation request added'), 'Category'] = 'Instantaneous'
+           (df['Event_name'] == 'Reservation request added'), 'Category'] = 'Ending'
+    reservation_rra = list((df.loc[reservation].loc[df['Event_name'] == 'Reservation request added']).index)
+    for item in reservation_rra:
+        search_before = item - 1
+        if df.iloc[search_before]['Event_name'] == 'Course module viewed':
+            # switch the events to calculate the duration properly
+            df.iloc[search_before], df.iloc[item] = df.iloc[item], df.iloc[search_before]
+
     df.loc[reservation &
-           (df['Event_name'] == 'Reservation request cancelled'), 'Category'] = 'Instantaneous'
+           (df['Event_name'] == 'Reservation request cancelled'), 'Category'] = 'Ending'
+    reservation_rrc = list((df.loc[reservation].loc[df['Event_name'] == 'Reservation request cancelled']).index)
+    for item in reservation_rrc:
+        search_before = item - 1
+        if df.iloc[search_before]['Event_name'] == 'Course module viewed':
+            # switch the events to calculate the duration properly
+            df.iloc[search_before], df.iloc[item] = df.iloc[item], df.iloc[search_before]
 
     # site home
     df.loc[(df['Component'] == 'Site home') &
@@ -453,6 +497,7 @@ def insert_temporal_category(records: Records) -> Records:
     for item in survey_rs:
         add_next = item + 0.5
         df.loc[add_next] = df.loc[item]
+        # add a new event to represent the starting action after the closing
         df.loc[add_next, 'Category'] = 'Starting'
         df.loc[add_next, 'Event_name'] = 'Survey summary viewed'
     df = df.sort_index().reset_index(drop=True)
@@ -479,6 +524,7 @@ def insert_temporal_category(records: Records) -> Records:
     for item in profile_upu:
         add_next = item + 0.5
         df.loc[add_next] = df.loc[item]
+        # add a new event to represent the starting action after the ending
         df.loc[add_next, 'Category'] = 'Starting'
         df.loc[add_next, 'Event_name'] = 'User profile viewed'
     df = df.sort_index().reset_index(drop=True)
@@ -493,6 +539,7 @@ def insert_temporal_category(records: Records) -> Records:
     for item in profile_uu:
         add_next = item + 0.5
         df.loc[add_next] = df.loc[item]
+        # add a new event to represent the starting action after the ending
         df.loc[add_next, 'Category'] = 'Starting'
         df.loc[add_next, 'Event_name'] = 'User profile viewed'
     df = df.sort_index().reset_index(drop=True)
@@ -515,6 +562,7 @@ def insert_temporal_category(records: Records) -> Records:
         search_next = item + 1
         if search_next < len(df):
             if df.iloc[search_next]['Event_name'] == 'Wiki page updated':
+                # indicate the correct category
                 df.loc[item, 'Category'] = 'Opening'
 
     df.loc[wiki &
@@ -528,6 +576,7 @@ def insert_temporal_category(records: Records) -> Records:
     for item in wiki_wpu:
         search_before = item - 1
         if df.iloc[search_before]['Event_name'] == 'Wiki page created':
+            # indicate the correct category
             df.loc[item, 'Category'] = 'Closing'
 
     df.loc[wiki &
@@ -542,18 +591,22 @@ def insert_temporal_category(records: Records) -> Records:
     return records
 
 
-def convert_simultaneous_ending(df: DataFrame, events_index) -> DataFrame:
+def convert_calendar_simultaneous_ending(df: DataFrame, events_index) -> DataFrame:
+    """
+    Convert 'calendar' simultaneous events to ending events.
+    """
 
     for item in events_index:
         search_next = item + 1
         if search_next < len(df):
-            if df.iloc[search_next]['Time'] != df.iloc[item]['Time'] and \
-                    df.iloc[search_next]['Time'] != (df.iloc[item]['Time'] + 1) and \
+            if df.iloc[search_next]['Unix_Time'] != df.iloc[item]['Unix_Time'] and \
+                    df.iloc[search_next]['Unix_Time'] != (df.iloc[item]['Unix_Time'] + 1) and \
                     df.iloc[search_next]['Event_name'] != df.iloc[item]['Event_name']:
 
                 df.loc[item, 'Category'] = 'Ending'
                 add_next = item + 0.5
                 df.loc[add_next] = df.loc[item]
+                # add a new event to represent the starting action after the ending
                 df.loc[add_next, 'Category'] = 'Starting'
                 df.loc[add_next, 'Event_name'] = 'Calendar viewed'
 

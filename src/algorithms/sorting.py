@@ -24,6 +24,8 @@ def sort_records(records: Records,
 
     # sort values
     df.sort_values(by=sort_by, ascending=ascending, inplace=inplace)
+    # reset index
+    df = df.reset_index(drop=True)
 
     records = Records(df)
 

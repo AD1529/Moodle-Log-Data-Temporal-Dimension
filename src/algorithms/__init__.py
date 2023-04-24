@@ -1,7 +1,9 @@
-__version__ = '0.1'
-__author__ = 'Daniela Rotelli'
+__all__ = ["Records", "categorisation", "cleaning", "duration", "extracting", "integrating", "sorting"]
 
+from src.classes.records import Records
+from .categorisation import *
 from .cleaning import *
+from .duration import *
 from .extracting import *
 from .integrating import *
-from .timing import *
+from .sorting import *
