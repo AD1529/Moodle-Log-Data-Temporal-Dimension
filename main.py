@@ -20,7 +20,6 @@ def get_categorical_duration(dataframe_path: str) -> Records:
     records = dt.get_basic_duration(records)
     # insert the temporal category
     records = ct.insert_temporal_category(records)
-    records.get_df().to_csv('src/datasets/df_category.csv')  # TODO togliere
     # compute the categorical duration
     records = dt.get_categorical_duration(records)
     # remove unnecessary data from the entire dataset
