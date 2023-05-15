@@ -77,8 +77,8 @@ where id <> 1
 import src.algorithms.extracting as ex
 
 # select specific attributes to get the desired values
-course_dates_path = 'src/datasets/example_course_dates.csv'
-course_A = ex.extract_records(records, course_area=['Course A'], role=['Student'], filepath=course_dates_path)
+COURSE_DATES_PATH = 'src/datasets/example_course_dates.csv'
+course_A = ex.extract_records(records, course_area=['Course A'], role=['Student'], filepath=COURSE_DATES_PATH)
 course_B = ex.extract_records(records, username=['Student 01'])
 ```
 ## License
