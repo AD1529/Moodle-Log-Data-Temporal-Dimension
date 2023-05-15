@@ -36,4 +36,4 @@ if __name__ == '__main__':
     logs = get_categorical_duration(FILE_PATH)
 
     # you can save the dataset for further analysis
-    logs.get_df().to_csv('src/datasets/df_categorical.csv')
+    logs.get_df().to_csv('src/datasets/categorical_df.csv')
