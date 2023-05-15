@@ -1,4 +1,4 @@
-# Moodle Log Data Temporal Ddimension
+# Moodle Log Data Temporal Dimension
 This repository contains the template for calculating the temporal duration of Moodle log data based of their category. 
 It takes as input the consolidated logs as described in [Moodle Log Data Consolidation](https://github.com/AD1529/Moodle-Log-Data-Consolidation) repository.
 
