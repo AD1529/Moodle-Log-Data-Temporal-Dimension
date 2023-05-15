@@ -1,5 +1,5 @@
 # logs
-df_consolidated_path = 'src/datasets/df_consolidated.csv'
+DF_CONSOLIDATED_PATH = 'src/datasets/df_consolidated.csv'
 
 # dates
-course_dates_path = 'src/datasets/course_dates.csv'
+COURSE_DATES_PATH = 'src/datasets/course_dates.csv'
