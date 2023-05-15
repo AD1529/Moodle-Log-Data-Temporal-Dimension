@@ -31,9 +31,9 @@ def get_categorical_duration(dataframe_path: str) -> Records:
 
 if __name__ == '__main__':
 
-    file_path = 'src/datasets/consolidated_df.csv'
+    FILE_PATH = 'src/datasets/consolidated_df.csv'
 
-    logs = get_categorical_duration(file_path)
+    logs = get_categorical_duration(FILE_PATH)
 
     # you can save the dataset for further analysis
     logs.get_df().to_csv('src/datasets/df_categorical.csv')
