@@ -1,6 +1,6 @@
 from src.classes.records import Records
 import src.algorithms.integrating as it
-import src.algorithms.cleaning as cl
+import src.algorithms.filtering as fl
 import src.algorithms.categorisation as ct
 import src.algorithms.duration as dt
 import src.algorithms.sorting as st
@@ -11,7 +11,7 @@ def get_categorical_duration(dataframe_path: str) -> Records:
     # get the dataframe
     dataframe = it.get_dataframe(dataframe_path)
     # before calculating the duration, safely remove events that have no impact on the duration calculation.
-    dataframe = cl.safely_remove_records(dataframe)
+    dataframe = fl.safely_remove_records(dataframe)
     # create a Records object to use its methods
     records = Records(dataframe)
     # to calculate the duration, values must be sorted by username and ID
@@ -24,7 +24,7 @@ def get_categorical_duration(dataframe_path: str) -> Records:
     # compute the categorical duration
     records = dt.get_categorical_duration(records)
     # remove unnecessary data from the entire dataset
-    records = Records(cl.remove_dataset_records(records.get_df()))
+    records = Records(fl.remove_dataset_records(records.get_df()))
 
     return records
 
