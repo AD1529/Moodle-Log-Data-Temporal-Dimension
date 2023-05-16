@@ -124,7 +124,7 @@ def get_categorical_duration(records: Records,
 
     
     # set data type
-    df['categorical_duration'] = df['categorical_duration'].astype('Int64')
+    df[categorical_duration_field] = df[categorical_duration_field].astype('Int64')
     
     records = Records(df)
 
