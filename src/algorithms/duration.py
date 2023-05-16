@@ -122,6 +122,10 @@ def get_categorical_duration(records: Records,
         # assign half of the duration to the ending event
         df.loc[search_before, categorical_duration_field] = math.floor(duration / 2)
 
+    
+    # set data type
+    df['categorical_duration'] = df['categorical_duration'].astype('Int64')
+    
     records = Records(df)
 
     return records
